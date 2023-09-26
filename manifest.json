@@ -1,0 +1,30 @@
+{
+    "manifest_version": 3,
+    "name": "amazonScraping",
+    "version": "0.2",
+    "description": "Auto Crawl Amazon Pages",
+    "permissions": [
+        "tabs",
+        "webNavigation",
+        "webRequest",
+        "storage"
+    ],
+    "host_permissions": [
+        "https://www.amazon.co.jp/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "128": "images/amazonlogo.png"
+      }
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["dps.js", "deals.js", "contentScript.js"]
+        }
+    ]
+}
