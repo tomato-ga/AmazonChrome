@@ -1,12 +1,13 @@
-let pageCounter = 0;  // グローバル変数としてページカウンタを定義
+let pageCounter = 0;
+let dpUrlLists = [];
+let dealUrlLists = [];
 
-const processPage = () => {
-    // ページの最後までスクロール
-    window.scrollBy(0, document.body.scrollHeight);
 
-    // setTimeoutを使用して遅延させる
-    setTimeout(function() {
-        // Xpathでノードを取得する
+// TODO dealページにアクセスしてないwww
+// TODO dealページのURLとdpページをkeyとvalueで紐付ける
+
+const extractDpUrlsIfDealUrlsExists = (dealUrlLists) => {
+    if (dealUrlLists.length > 0) {
         let aTags = document.evaluate(
             '//div[contains(@class, "gridDisplayGrid")]//a[contains(@class, "a-link-normal") and contains(@class, "DealLink-module")]',
             document,
@@ -15,54 +16,71 @@ const processPage = () => {
             null
         );
 
-        console.log(aTags.snapshotLength);
-
-        for (let i = 0; i < aTags.snapshotLength; i++) {
+        for (let i= 0; i< aTags.snapshotLength; i++)  {
             let node = aTags.snapshotItem(i);
-
-            dpurl = slashDpUrl(node.href);
+            let dpurl = slashDpUrl(node.href);
             if (dpurl) {
-                console.log(node.textContent);
-                console.log(dpurl);
+                dpUrlLists.push(dpurl);
             }
-
-            dealurl = slashDealUrl(node.href);
-            if (dealurl) {
-                console.log(node.textContent);
-                console.log(dealurl);
-            }
-        }
-
-        // すべての要素を取得した後、次のページへのリンクをクリック
-        if (pageCounter < 4) {  // 5ページ分の処理を実行する前に
-            let nextLink = document.querySelector('li.a-last > a');
-            if (nextLink) {
-                pageCounter++;  // ページカウンタをインクリメント
-                nextLink.click();
-            }
-        }
-    }, 6500);  // 6秒待機
-};
-
-// MutationObserverのコールバック関数
-const observerCallback = (mutationsList, observer) => {
-    for(let mutation of mutationsList) {
-        if (mutation.type === 'childList') {
-            processPage();
-            break;
         }
     }
 };
 
-// MutationObserverのインスタンスを作成
-const observer = new MutationObserver(observerCallback);
+const processPage = async () => {
+    // ページの最後までスクロール
+    window.scrollBy(0, document.body.scrollHeight);
 
-// body要素の子要素の変更を監視する設定
-observer.observe(document.body, { childList: true, subtree: true });
+    await new Promise(resolve => setTimeout(resolve, 4500));
 
-// 初回のページ読み込み時にもprocessPageを実行
-window.addEventListener('load', processPage);
+    let aTags = document.evaluate(
+        '//div[contains(@class, "gridDisplayGrid")]//a[contains(@class, "a-link-normal") and contains(@class, "DealLink-module")]',
+        document,
+        null,
+        XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+        null
+    );
+    console.log("------------------------");
+    console.log("リンクの数", aTags.snapshotLength);
+    console.log("------------------------");
 
+
+    for (let i = 0; i < aTags.snapshotLength; i++) {
+        let node = aTags.snapshotItem(i);
+
+        dpurl = slashDpUrl(node.href);
+        if (dpurl) {
+            dpUrlLists.push(dpurl);
+            // console.log(node.textContent);
+            // console.log(dpurl);
+        }
+
+        dealurl = slashDealUrl(node.href);
+        if (dealurl) {
+            dealUrlLists.push(dealurl);
+            // console.log(node.textContent);
+            // console.log(dealurl);
+        }
+    }
+
+    if (pageCounter < 4) {
+        let nextLink = document.querySelector('ul.a-pagination > li.a-last > a');
+        if (nextLink) {
+            pageCounter++;
+            nextLink.click();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await processPage();  // 再帰的に呼び出し
+        }
+    } else {
+        // すべてのページの処理が完了した後に関数を呼び出す
+        extractDpUrlsIfDealUrlsExists(dealUrlLists);
+        console.log("-----------------");
+        console.log("dpのURL: ");
+        console.log(dpUrlLists);
+        console.log("-----------------");
+        console.log("最終的なdpのURLだよ");
+        console.log("最終的なdpのURL件数はこちら→", dpUrlLists.length);
+    }
+};
 
 const slashDpUrl = (nodehref) => {
     let url = nodehref;
@@ -77,3 +95,113 @@ const slashDealUrl = (nodehref) => {
         return url;
     }
 }
+
+window.addEventListener('load', () => {
+    processPage();
+});
+
+
+// MutationObserver設定コード
+// let pageCounter = 0;
+// let observer;
+
+// const observerCallback = (mutationsList, observerInstance) => {
+//     for(let mutation of mutationsList) {
+//         if (mutation.type === 'childList') {
+//             observerInstance.disconnect();  // Observerを一時的に停止
+//             processPage();
+//             break;
+//         }
+//     }
+// };
+
+// const setupObserver = () => {
+//     let targetNode = document.evaluate(
+//         '//div[contains(@class, "gridDisplayGrid")]',
+//         document,
+//         null,
+//         XPathResult.FIRST_ORDERED_NODE_TYPE,
+//         null
+//     ).singleNodeValue;
+
+//     if (targetNode) {
+//         observer = new MutationObserver(observerCallback);
+//         observer.observe(targetNode, { childList: true, subtree: true });
+//     }
+// };
+
+// const doubleScroll = () => {
+//     window.scrollBy(0, document.body.scrollHeight);
+//     setTimeout(() => {
+//         window.scrollBy(0, document.body.scrollHeight);
+//     }, 3000);
+// };
+
+// const processPage = () => {
+//     // setupObserver();  // Observerを設定
+//     doubleScroll();
+
+//     setTimeout(function() {
+//         let aTags = document.evaluate(
+//             '//div[contains(@class, "gridDisplayGrid")]//a[contains(@class, "a-link-normal") and contains(@class, "DealLink-module")]',
+//             document,
+//             null,
+//             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+//             null
+//         );
+
+//         console.log(aTags.snapshotLength);
+
+//         for (let i = 0; i < aTags.snapshotLength; i++) {
+//             let node = aTags.snapshotItem(i);
+
+//             dpurl = slashDpUrl(node.href);
+//             if (dpurl) {
+//                 console.log(node.textContent);
+//                 console.log(dpurl);
+//             }
+
+//             dealurl = slashDealUrl(node.href);
+//             if (dealurl) {
+//                 console.log(node.textContent);
+//                 console.log(dealurl);
+//             }
+//         }
+
+//         if (pageCounter < 4) {
+//             let nextLink = document.querySelector('li.a-last > a');
+//             if (nextLink) {
+//                 console.log("ページカウンター", pageCounter);
+//                 pageCounter++;
+//                 nextLink.click();
+//                 setTimeout(() => {
+//                     if (observer) {
+//                         setupObserver();  // Observerを再設定
+//                     }
+//                 }, 2000);
+//             }
+//         } else {
+//             if (observer) {
+//                 observer.disconnect();
+//             }
+//         }
+//     }, 8500);
+// };
+
+// const slashDpUrl = (nodehref) => {
+//     let url = nodehref;
+//     if (url.indexOf('/dp') !== -1) {
+//         return url;
+//     }
+// }
+
+// const slashDealUrl = (nodehref) => {
+//     let url = nodehref;
+//     if (url.indexOf('/deal') !== -1) {
+//         return url;
+//     }
+// }
+
+// window.addEventListener('load', () => {
+//     processPage();
+// });
