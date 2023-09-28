@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "amazonScraping",
-    "version": "0.2",
+    "version": "0.22",
     "description": "Auto Crawl Amazon Pages",
     "permissions": [
         "tabs",
