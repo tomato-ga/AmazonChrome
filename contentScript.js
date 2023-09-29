@@ -37,6 +37,8 @@ const processPage = async () => {
         if (dealurl) {
             dealUrlLists.push(dealurl);
         }
+
+        // TODO dealURLにアクセスし、オブジェクトでキーと複数URLをセットにしてデータを保存する
     }
 
     if (pageCounter < 2) {
@@ -75,3 +77,5 @@ window.addEventListener('load', async () => {
         await extractDpUrlsIfDealUrlsExists(dpUrlLists);
     }
 });
+
+
