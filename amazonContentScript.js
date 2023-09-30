@@ -106,6 +106,11 @@ if (window.location.href.includes('/dp')) {
     productInfo.descripText = descriptionText1 ? descriptionText1 : (descriptionText2 ? descriptionText2 : "商品説明なし");
     console.log("商品ページの商品説明:", productInfo.descripText);
 
+    // タブを閉じる
+    chrome.runtime.sendMessage({ action: 'closeCurrentTab' });
+
+
+
     // TODO descriptionText1の文字数が少なすぎる場合は、descriptionText2にする
 
 }

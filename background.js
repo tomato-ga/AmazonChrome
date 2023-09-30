@@ -1,18 +1,24 @@
 // /Users/ore/Desktop/AmazonChromeEx/background.js
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'openTab') {
-        chrome.tabs.create({ url: message.url, active: false });
-        return true; // Will respond asynchronously
-    }
-});
+    switch (message.action) {
+        case 'openTab':
+            chrome.tabs.create({ url: message.url, active: false });
+            return true; // Will respond asynchronously
 
+        case 'dealLinks':
+            console.log(message.links);
+            break;
 
-// /dealの処理
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'dealLinks') {
-        console.log(message.links);
-        // 必要に応じて処理を行います。
+        case 'closeCurrentTab':
+            chrome.tabs.remove(sender.tab.id);
+            break;
+
+        case 'processLinks':
+            processLinks(message.links);
+            break;
+
+        // 他のメッセージタイプの処理もここに追加できます
     }
 });
 
@@ -35,3 +41,20 @@ chrome.webNavigation.onCompleted.addListener(function(details) {
         pathEquals: '/'
     }]
 });
+
+
+async function processLinks(links) {
+    let processedCount = 0;
+
+    for (let i = 0; i < links.length; i += 3) {
+        let urlsToOpen = links.slice(i, i + 3);
+        for (let dpUrl of urlsToOpen) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            chrome.tabs.create({ url: dpUrl, active: false });
+            processedCount++;
+        }
+        await new Promise(resolve => setTimeout(resolve, 7000));
+    }
+
+    console.log(`Processed ${processedCount} out of ${links.length} links.`);
+}

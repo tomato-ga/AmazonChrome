@@ -1,3 +1,5 @@
+// /Users/donbe/Library/Mobile Documents/com~apple~CloudDocs/Codes/AmazonChromeEx/contentScript.js
+
 let pageCounter = 0;
 let dpUrlLists = [];
 let dealUrlLists = [];
@@ -11,7 +13,7 @@ const extractDpUrlsIfDealUrlsExists = async (dpUrls) => {
                 await chrome.runtime.sendMessage({ action: 'openTab', url: dpUrl });
             }, 5000); // 5秒待機してから実行
         }
-        await new Promise(resolve => setTimeout(resolve, 7000)); // 3つのタブが開かれるのを待つための15秒の待ち時間
+        await new Promise(resolve => setTimeout(resolve, 7000)); // 3つのタブが開かれるのを待つための7秒の待ち時間
     }
 };
 
@@ -86,5 +88,3 @@ window.addEventListener('load', async () => {
         await openDealUrls();
     }
 });
-
-

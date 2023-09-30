@@ -26,8 +26,9 @@ if (window.location.href.includes('/deal')) {
         links.push(href);
     }
 
-    console.log(links);
+    chrome.runtime.sendMessage({ action: 'processLinks', links: links });
 
     // 他のファイルやバックグラウンドスクリプトとの通信やデータの保存にchrome.runtime.sendMessageを使用します。
-    chrome.runtime.sendMessage({ action: 'dealLinks', links: links });
+    // chrome.runtime.sendMessage({ action: 'dealLinks', links: links });
 }
+
