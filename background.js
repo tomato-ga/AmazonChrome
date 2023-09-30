@@ -1,7 +1,18 @@
+// /Users/ore/Desktop/AmazonChromeEx/background.js
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'openTab') {
         chrome.tabs.create({ url: message.url, active: false });
         return true; // Will respond asynchronously
+    }
+});
+
+
+// /dealの処理
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'dealLinks') {
+        console.log(message.links);
+        // 必要に応じて処理を行います。
     }
 });
 

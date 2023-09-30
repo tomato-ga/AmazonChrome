@@ -1,3 +1,5 @@
+// /Users/ore/Desktop/AmazonChromeEx/amazonContentScript.js
+
 if (window.location.href.includes('/dp')) {
 
     let productInfo = {};

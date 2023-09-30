@@ -1,6 +1,7 @@
 let pageCounter = 0;
 let dpUrlLists = [];
 let dealUrlLists = [];
+let dealLinksObject = {};
 
 const extractDpUrlsIfDealUrlsExists = async (dpUrls) => {
     for (let i = 0; i < dpUrls.length; i += 3) {
@@ -11,6 +12,15 @@ const extractDpUrlsIfDealUrlsExists = async (dpUrls) => {
             }, 5000); // 5秒待機してから実行
         }
         await new Promise(resolve => setTimeout(resolve, 7000)); // 3つのタブが開かれるのを待つための15秒の待ち時間
+    }
+};
+
+
+const openDealUrls = async () => {
+    let maxUrlsToOpen = 3; // dealページを3枚までに制限した 本番では外す
+    for (let i = 0; i < Math.min(dealUrlLists.length, maxUrlsToOpen); i++) {
+        chrome.runtime.sendMessage({ action: 'openTab', url: dealUrlLists[i] });
+        await new Promise(resolve => setTimeout(resolve, 1000));  // 1秒待つ
     }
 };
 
@@ -37,8 +47,6 @@ const processPage = async () => {
         if (dealurl) {
             dealUrlLists.push(dealurl);
         }
-
-        // TODO dealURLにアクセスし、オブジェクトでキーと複数URLをセットにしてデータを保存する
     }
 
     if (pageCounter < 2) {
@@ -72,9 +80,10 @@ const slashDealUrl = (nodehref) => {
 
 window.addEventListener('load', async () => {
     const currentUrl = window.location.href;
-    if (!currentUrl.includes('/dp')) {
+    if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal')) {
         await processPage();
-        await extractDpUrlsIfDealUrlsExists(dpUrlLists);
+        // await extractDpUrlsIfDealUrlsExists(dpUrlLists);
+        await openDealUrls();
     }
 });
 
