@@ -14,8 +14,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             chrome.tabs.remove(sender.tab.id);
             break;
 
-        case 'processLinkMap':
-            dealProcessLinks(message.linkMap);
+        case 'processLinks':
+            processLinks(message.links);
             break;
 
         // 他のメッセージタイプの処理もここに追加できます
@@ -42,22 +42,19 @@ chrome.webNavigation.onCompleted.addListener(function(details) {
     }]
 });
 
-async function dealProcessLinks(linkMap) {
+
+async function dealProcessLinks(links) {
     let processedCount = 0;
 
-    // linkMapから全ての/dpリンクを取得
-    for (let dealUrl in linkMap) {
-        const dpLinks = linkMap[dealUrl];
-
-        for (let i = 0; i < dpLinks.length; i += 3) {
-            let urlsToOpen = dpLinks.slice(i, i + 3);
-            for (let dpUrl of urlsToOpen) {
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                chrome.tabs.create({ url: dpUrl, active: false });
-                processedCount++;
-            }
-            await new Promise(resolve => setTimeout(resolve, 7000));
+    for (let i = 0; i < links.length; i += 3) {
+        let urlsToOpen = links.slice(i, i + 3);
+        for (let dpUrl of urlsToOpen) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            chrome.tabs.create({ url: dpUrl, active: false });
+            processedCount++;
         }
+        await new Promise(resolve => setTimeout(resolve, 7000));
     }
-    console.log(`Processed ${processedCount} links.`);
+
+    console.log(`Processed ${processedCount} out of ${links.length} links.`);
 }
