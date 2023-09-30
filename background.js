@@ -14,8 +14,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             chrome.tabs.remove(sender.tab.id);
             break;
 
-        case 'processLinks':
-            processLinks(message.links);
+        case 'processLinkMap':
+            dealProcessLinks(message.links);
             break;
 
         // 他のメッセージタイプの処理もここに追加できます
