@@ -22,17 +22,9 @@
       }
     },
     "content_scripts": [
-        {
-            "matches": ["<all_urls>"],
-            "js": ["contentScript.js"]
-        },
-        {
-            "matches": ["*://www.amazon.co.jp/*/dp/*"],
-            "js": ["amazonContentScript.js"]
-        },
-        {
-          "matches": ["*://www.amazon.co.jp/*/deal/*"],
-          "js": ["amazonDealContentScript.js"]
-        }
+      {
+        "matches": ["<all_urls>"],
+        "js": ["amazonDealContentScript.js", "amazonContentScript.js", "contentScript.js"]
+    }
     ]
 }
