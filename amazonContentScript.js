@@ -43,7 +43,6 @@ if (window.location.href.includes('/dp')) {
     let affUrl = currentUrl + "&tag=entamenews-22";
     productInfo.affUrl = affUrl;
 
-
     // 割引きを抽出
     const extractPriceoff = () => {
         const rePrice = /-\d+%/;
@@ -108,8 +107,6 @@ if (window.location.href.includes('/dp')) {
 
     // タブを閉じる
     chrome.runtime.sendMessage({ action: 'closeCurrentTab' });
-
-
 
     // TODO descriptionText1の文字数が少なすぎる場合は、descriptionText2にする
 

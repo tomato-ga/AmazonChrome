@@ -17,7 +17,6 @@ const extractDpUrlsIfDealUrlsExists = async (dpUrls) => {
     }
 };
 
-
 const openDealUrls = async () => {
     let maxUrlsToOpen = 3; // dealページを3枚までに制限した 本番では外す
     for (let i = 0; i < Math.min(dealUrlLists.length, maxUrlsToOpen); i++) {

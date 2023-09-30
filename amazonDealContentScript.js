@@ -2,7 +2,6 @@
 
 console.log("amazonDealContentScript.js is loaded");
 
-
 if (window.location.href.includes('/deal')) {
     window.scrollBy(0, document.body.scrollHeight);
 
@@ -16,19 +15,25 @@ if (window.location.href.includes('/deal')) {
 
     console.log(aTags.snapshotLength);
 
-    let links = [];
+    let linkMap = {};
+    let dpLinks = [];
     for (let i = 0; i < aTags.snapshotLength; i++) {
         let href = aTags.snapshotItem(i).getAttribute('href');
         if (!href.startsWith('http')) {
             href = 'https://www.amazon.co.jp' + href;
         }
         console.log(href);
-        links.push(href);
+        dpLinks.push(href);
     }
+    
+    linkMap[window.location.href] = dpLinks;
+    console.log(linkMap);
 
-    chrome.runtime.sendMessage({ action: 'processLinks', links: links });
+    // background scriptにこのリンクマップを送る
+    chrome.runtime.sendMessage({ action: 'processLinkMap', linkMap: linkMap });
 
-    // 他のファイルやバックグラウンドスクリプトとの通信やデータの保存にchrome.runtime.sendMessageを使用します。
-    // chrome.runtime.sendMessage({ action: 'dealLinks', links: links });
+    // また、各リンクを処理するためのコードも必要です
+    // 例: chrome.runtime.sendMessage({ action: 'processLinks', links: dpLinks });
 }
+
 
