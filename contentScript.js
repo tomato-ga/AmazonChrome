@@ -24,8 +24,7 @@ const chromeRuntoDPorDealUrls = async (dataObject) => {
         // TODO これはまだ dealLinksObjectをiterateする処理をこちらに追加します。
         for (let dealUrl in dataObject) {
             if (dataObject[dealUrl].hasDealUrl) {
-                // deal URLに関連する処理をこちらに書く
-                // 例：chrome.runtime.sendMessage({ action: 'openTab', url: dealUrl });
+                await chrome.runtime.sendMessage({ action: 'dealData', data: dataObject });
             }
         }
     }
@@ -52,7 +51,7 @@ const handleDpUrl = (url) => {
 const handleDealUrl = (url) => {
     dealUrlLists.push(url);
     dealLinksObject[url] = {
-        urls: null,  // この部分は後で更新することが考えられます
+        urls: null,
         hasDealUrl: true
     };
 };
@@ -113,8 +112,8 @@ window.addEventListener('load', async () => {
     const currentUrl = window.location.href;
     if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal')) {
         await processPage();
-        await chromeRuntoDPorDealUrls(dpLinkObject); // TODO 処理の順番が違う？
+        // await chromeRuntoDPorDealUrls(dpLinkObject); TODO: DP URLは一旦コメントアウト
+        await chromeRuntoDPorDealUrls(dealLinksObject);
 
-        // TODO /dealのページにアクセスしていない
     }
 });

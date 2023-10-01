@@ -14,8 +14,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             chrome.tabs.remove(sender.tab.id);
             break;
 
-        case 'processLinkMap':
-            dealProcessLinks(message.links);
+        // DealページのdpURLを処理する
+        case 'processDealLinkMap':
+            dealProcessLinks(message.linkMap);
             break;
 
         case 'dpData':
@@ -29,12 +30,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     }
                 });
             });
-        
             break;
 
         case 'dealData':
             console.log("Received dealData:", message.data);
-            // dealDataのfurther処理をこちらに追加する
+            
+            for (let dealUrl in message.data) {
+                if (dealUrl) {
+                    chrome.tabs.unUpdated.addListener(function listener (tabId, info) {
+                        if (info.status === 'complete' && tabId === newTab.id) {
+                            chrome.tabs.sendMessage(tabId, {action: 'processDealData', data: message.data});
+                            chrome.tabs.onUpdated.removeListener(listener);
+                        }
+                    })
+                }
+            }
+
             break;
     }
 });
@@ -59,7 +70,7 @@ chrome.webNavigation.onCompleted.addListener(function(details) {
     }]
 });
 
-
+// TODO dealURLを含めたオブジェクトを渡す
 async function dealProcessLinks(links) {
     let processedCount = 0;
 

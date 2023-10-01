@@ -30,7 +30,7 @@ if (window.location.href.includes('/deal')) {
     console.log(linkMap);
 
     // background scriptにこのリンクマップを送る
-    chrome.runtime.sendMessage({ action: 'processLinkMap', linkMap: linkMap });
+    chrome.runtime.sendMessage({ action: 'processDealLinkMap', linkMap: linkMap });
 
 
     // TODO DBに保存する
