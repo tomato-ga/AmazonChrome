@@ -4,8 +4,12 @@ let pageCounter = 0;
 let dpUrlLists = [];
 let dealUrlLists = [];
 let dealLinksObject = {};
+let dpLinkObject = {};
 
-const extractDpUrlsIfDealUrlsExists = async (dpUrls) => {
+
+const extractDpUrlsIfDealUrlsExists = async (dpLinkObject) => {
+    const dpUrls = dpLinkObject.urls;  // dpLinkObjectからURLリストを取得
+
     for (let i = 0; i < dpUrls.length; i += 3) {
         let urlsToOpen = dpUrls.slice(i, i + 3);
         for (let dpUrl of urlsToOpen) {
@@ -17,15 +21,33 @@ const extractDpUrlsIfDealUrlsExists = async (dpUrls) => {
     }
 };
 
-const openDealUrls = async () => {
-    let maxUrlsToOpen = 3; // dealページを3枚までに制限した 本番では外す
-    for (let i = 0; i < Math.min(dealUrlLists.length, maxUrlsToOpen); i++) {
-        chrome.runtime.sendMessage({ action: 'openTab', url: dealUrlLists[i] });
-        await new Promise(resolve => setTimeout(resolve, 1000));  // 1秒待つ
+
+const sendToBackground = (message) => {
+    try {
+        chrome.runtime.sendMessage(message);
+    } catch (error) {
+        console.error("Failed to send message:", error);
     }
 };
 
+const handleDpUrl = (url) => {
+    dpUrlLists.push(url);
+    dpLinkObject = {
+        urls: dpUrlLists,
+        hasDealUrl: false
+    };
+};
+
+const handleDealUrl = (url) => {
+    dealUrlLists.push(url);
+    dealLinksObject[url] = {
+        urls: null,  // この部分は後で更新することが考えられます
+        hasDealUrl: true
+    };
+};
+
 const processPage = async () => {
+
     window.scrollBy(0, document.body.scrollHeight);
     await new Promise(resolve => setTimeout(resolve, 4500));
 
@@ -39,14 +61,15 @@ const processPage = async () => {
 
     for (let i = 0; i < aTags.snapshotLength; i++) {
         let node = aTags.snapshotItem(i);
+        
         let dpurl = slashDpUrl(node.href);
         if (dpurl) {
-            dpUrlLists.push(dpurl);
+            handleDpUrl(dpurl);
         }
 
         let dealurl = slashDealUrl(node.href);
         if (dealurl) {
-            dealUrlLists.push(dealurl);
+            handleDealUrl(dealurl);
         }
     }
 
@@ -59,31 +82,27 @@ const processPage = async () => {
             await processPage();
         }
     } else {
-        console.log("dpのURL: ", dpUrlLists);
+        sendToBackground({action: "dpData", data: dpLinkObject});
+        sendToBackground({action: "dealData", data: dealLinksObject});
     }
 
-    return dpUrlLists;
+    console.log("dpLinkObjectの中身", dpLinkObject);
+    console.log("dealLinksObjectの中身", dealLinksObject);
 };
 
 const slashDpUrl = (nodehref) => {
-    let url = nodehref;
-    if (url.indexOf('/dp') !== -1) {
-        return url;
-    }
-}
+    return nodehref.includes('/dp') ? nodehref : null;
+};
 
 const slashDealUrl = (nodehref) => {
-    let url = nodehref;
-    if (url.indexOf('/deal') !== -1) {
-        return url;
-    }
-}
+    return nodehref.includes('/deal') ? nodehref : null;
+};
 
 window.addEventListener('load', async () => {
     const currentUrl = window.location.href;
     if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal')) {
         await processPage();
-        // await extractDpUrlsIfDealUrlsExists(dpUrlLists);
-        await openDealUrls();
+        await extractDpUrlsIfDealUrlsExists(dpLinkObject); // TODO 処理の順番が違う？
+
     }
 });

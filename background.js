@@ -18,7 +18,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             dealProcessLinks(message.links);
             break;
 
-        // 他のメッセージタイプの処理もここに追加できます
+        case 'dpData':  // このアクションを追加
+            console.log("Received dpData:", message.data);
+            // dpDataのfurther処理をこちらに追加する
+            break;
+
+        case 'dealData':  // このアクションを追加
+            console.log("Received dealData:", message.data);
+            // dealDataのfurther処理をこちらに追加する
+            break;
     }
 });
 

@@ -32,8 +32,8 @@ if (window.location.href.includes('/deal')) {
     // background scriptにこのリンクマップを送る
     chrome.runtime.sendMessage({ action: 'processLinkMap', linkMap: linkMap });
 
-    // また、各リンクを処理するためのコードも必要です
-    // 例: chrome.runtime.sendMessage({ action: 'processLinks', links: dpLinks });
+
+    // TODO DBに保存する
 }
 
 
