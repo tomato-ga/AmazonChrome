@@ -39,7 +39,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 if (dealUrl) {
                     chrome.tabs.unUpdated.addListener(function listener (tabId, info) {
                         if (info.status === 'complete' && tabId === newTab.id) {
-                            chrome.tabs.sendMessage(tabId, {action: 'processDealData', data: message.data});
+                            chrome.tabs.sendMessage(tabId, {action: 'processDealData'});
                             chrome.tabs.onUpdated.removeListener(listener);
                         }
                     })
@@ -70,19 +70,26 @@ chrome.webNavigation.onCompleted.addListener(function(details) {
     }]
 });
 
-// TODO dealURLを含めたオブジェクトを渡す
-async function dealProcessLinks(links) {
+// TODO dealURLを含めたオブジェクトが渡る
+async function dealProcessLinks(linksObj) {
     let processedCount = 0;
 
-    for (let i = 0; i < links.length; i += 3) {
-        let urlsToOpen = links.slice(i, i + 3);
-        for (let dpUrl of urlsToOpen) {
+    for (let dealUrl in linksObj) {
+        let dpUrls = linksObj[dealUrl];
+        for (let dpUrl of dpUrls) {
             await new Promise(resolve => setTimeout(resolve, 5000));
-            chrome.tabs.create({ url: dpUrl, active: false });
+            chrome.tabs.create({ url: dpUrl, active: false, openerTabId: tab.id }, function(tab) {
+                chrome.tabs.onUpdated.addListener(function listener (tabId, info) {
+                    if (info.status === 'complete' && tabId === tab.id) {
+                        chrome.runtime.sendMessage({ action: 'processDpData', data: dpUrl, dealUrl: dealUrl });
+                        chrome.tabs.onUpdated.removeListener(listener);
+                    }
+                });
+            });
             processedCount++;
         }
         await new Promise(resolve => setTimeout(resolve, 7000));
     }
 
-    console.log(`Processed ${processedCount} out of ${links.length} links.`);
+    console.log(`Processed ${processedCount} links.`);
 }
