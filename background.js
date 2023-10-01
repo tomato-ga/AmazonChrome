@@ -18,12 +18,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             dealProcessLinks(message.links);
             break;
 
-        case 'dpData':  // このアクションを追加
-            console.log("Received dpData:", message.data);
-            // dpDataのfurther処理をこちらに追加する
+        case 'dpData':
+            console.log("Received dpData:", message.url, message.data);
+            
+            chrome.tabs.create({ url: message.url, active: false }, (newTab) => {
+                chrome.tabs.onUpdated.addListener(function listener (tabId, info) {
+                    if (info.status === 'complete' && tabId === newTab.id) {
+                        chrome.tabs.sendMessage(tabId, {action: 'processDpData', data: message.data, url: message.url});
+                        chrome.tabs.onUpdated.removeListener(listener);  // Remove the listener to avoid it being called again
+                    }
+                });
+            });
+        
             break;
 
-        case 'dealData':  // このアクションを追加
+        case 'dealData':
             console.log("Received dealData:", message.data);
             // dealDataのfurther処理をこちらに追加する
             break;

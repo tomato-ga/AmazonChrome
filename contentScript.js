@@ -7,19 +7,30 @@ let dealLinksObject = {};
 let dpLinkObject = {};
 
 
-const extractDpUrlsIfDealUrlsExists = async (dpLinkObject) => {
-    const dpUrls = dpLinkObject.urls;  // dpLinkObjectからURLリストを取得
-
-    for (let i = 0; i < dpUrls.length; i += 3) {
-        let urlsToOpen = dpUrls.slice(i, i + 3);
-        for (let dpUrl of urlsToOpen) {
-            setTimeout(async () => {
-                await chrome.runtime.sendMessage({ action: 'openTab', url: dpUrl });
-            }, 5000); // 5秒待機してから実行
+const chromeRuntoDPorDealUrls = async (dataObject) => {
+    if (!dataObject.hasDealUrl) {
+        const dpUrls = dataObject.urls;
+    
+        for (let i = 0; i < dpUrls.length; i += 3) {
+            let dpurlsToOpen = dpUrls.slice(i, i + 3);
+            for (let dpUrl of dpurlsToOpen) {
+                setTimeout(async () => {
+                    await chrome.runtime.sendMessage({ action: 'dpData', url: dpUrl, data: dataObject });
+                }, 5000); // 5秒待機してから実行
+            }
+            await new Promise(resolve => setTimeout(resolve, 7000)); // 3つのタブが開かれるのを待つための7秒の待ち時間
         }
-        await new Promise(resolve => setTimeout(resolve, 7000)); // 3つのタブが開かれるのを待つための7秒の待ち時間
+    } else {
+        // TODO これはまだ dealLinksObjectをiterateする処理をこちらに追加します。
+        for (let dealUrl in dataObject) {
+            if (dataObject[dealUrl].hasDealUrl) {
+                // deal URLに関連する処理をこちらに書く
+                // 例：chrome.runtime.sendMessage({ action: 'openTab', url: dealUrl });
+            }
+        }
     }
 };
+
 
 
 const sendToBackground = (message) => {
@@ -102,7 +113,8 @@ window.addEventListener('load', async () => {
     const currentUrl = window.location.href;
     if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal')) {
         await processPage();
-        await extractDpUrlsIfDealUrlsExists(dpLinkObject); // TODO 処理の順番が違う？
+        await chromeRuntoDPorDealUrls(dpLinkObject); // TODO 処理の順番が違う？
 
+        // TODO /dealのページにアクセスしていない
     }
 });
