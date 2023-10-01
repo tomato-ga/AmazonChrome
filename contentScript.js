@@ -10,7 +10,12 @@ let dpLinkObject = {};
 const chromeRuntoDPorDealUrls = async (dataObject) => {
     if (!dataObject.hasDealUrl) {
         const dpUrls = dataObject.urls;
-    
+        
+        if (!dpUrls || !Array.isArray(dpUrls) || dpUrls.length === 0) {
+            console.warn("dpUrls is not properly defined or is an empty array.");
+            // return;  // 処理を中断
+        }
+
         for (let i = 0; i < dpUrls.length; i += 3) {
             let dpurlsToOpen = dpUrls.slice(i, i + 3);
             for (let dpUrl of dpurlsToOpen) {
@@ -21,16 +26,12 @@ const chromeRuntoDPorDealUrls = async (dataObject) => {
             await new Promise(resolve => setTimeout(resolve, 7000)); // 3つのタブが開かれるのを待つための7秒の待ち時間
         }
     } else {
-        // TODO これはまだ dealLinksObjectをiterateする処理をこちらに追加します。
-        for (let dealUrl in dataObject) {
-            if (dataObject[dealUrl].hasDealUrl) {
-                await chrome.runtime.sendMessage({ action: 'dealData', data: dataObject });
-            }
+
+        if (dataObject.hasDealUrl) {
+            await chrome.runtime.sendMessage({ action: 'dealData', data: dataObject });
         }
     }
 };
-
-
 
 const sendToBackground = (message) => {
     try {
@@ -50,10 +51,8 @@ const handleDpUrl = (url) => {
 
 const handleDealUrl = (url) => {
     dealUrlLists.push(url);
-    dealLinksObject[url] = {
-        urls: null,
-        hasDealUrl: true
-    };
+    dealLinksObject.hasDealUrl = true;
+    dealLinksObject.urls = dealUrlLists;
 };
 
 const processPage = async () => {
@@ -112,8 +111,8 @@ window.addEventListener('load', async () => {
     const currentUrl = window.location.href;
     if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal')) {
         await processPage();
-        // await chromeRuntoDPorDealUrls(dpLinkObject); TODO: DP URLは一旦コメントアウト
+        // TODO: DP URLは一旦コメントアウト
+        // await chromeRuntoDPorDealUrls(dpLinkObject);
         await chromeRuntoDPorDealUrls(dealLinksObject);
-
     }
 });

@@ -1,10 +1,9 @@
 // /Users/ore/Desktop/AmazonChromeEx/amazonDealContentScript.js
 
-console.log("amazonDealContentScript.js is loaded");
-
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action=== 'processDealData') {
+
+        console.log("amazonDealContentScript.js is loaded");
 
         if (window.location.href.includes('/deal')) {
             window.scrollBy(0, document.body.scrollHeight);

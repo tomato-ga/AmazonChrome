@@ -35,17 +35,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'dealData':
             console.log("Received dealData:", message.data);
             
-            for (let dealUrl in message.data) {
+            for (let dealUrl of message.data.urls) {
                 if (dealUrl) {
-                    chrome.tabs.unUpdated.addListener(function listener (tabId, info) {
-                        if (info.status === 'complete' && tabId === newTab.id) {
-                            chrome.tabs.sendMessage(tabId, {action: 'processDealData'});
-                            chrome.tabs.onUpdated.removeListener(listener);
-                        }
-                    })
+                    chrome.tabs.create({ url: dealUrl, active: false }, function(newTab) {
+                        // 新しいタブが開かれた後にリスナーを追加
+                        chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+                            if (info.status === 'complete' && tabId === newTab.id) {
+                                chrome.tabs.sendMessage(tabId, {action: 'processDealData'});
+                                chrome.tabs.onUpdated.removeListener(listener);
+                            }
+                        });
+                    });
                 }
             }
-
             break;
     }
 });
