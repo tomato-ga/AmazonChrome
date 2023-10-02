@@ -63,26 +63,46 @@ chrome.webNavigation.onCompleted.addListener(function(details) {
 async function dealProcessLinks(linksObj) {
     let processedCount = 0;
 
+    // 1. Listenerの累積を防ぐための関数
+    function createTabAndUpdateListener(dpUrl, dealUrl) {
+        return new Promise((resolve, reject) => {
+            chrome.tabs.create({ url: dpUrl, active: false }, function(tab) {
+                function listener(tabId, info) {
+                    if (info.status === 'complete' && tabId === tab.id) {
+                        console.log("deal URLから/dpを開いたよ");
+                        
+                        // chrome.runtime.sendMessageをchrome.tabs.sendMessageに変更
+                        chrome.tabs.sendMessage(tab.id, { action: 'processDpData', dpUrl: dpUrl, dealUrl: dealUrl });
+
+                        // リスナーを削除
+                        chrome.tabs.onUpdated.removeListener(listener);
+                        resolve();
+                    }
+                }
+
+                // 新しいタブが開かれた後にリスナーを追加
+                chrome.tabs.onUpdated.addListener(listener);
+            });
+        });
+    }
+
     for (let dealUrl in linksObj) {
         let dpUrls = linksObj[dealUrl];
-        console.log("dealURLから開くdpURLです: ",dpUrls);
+        console.log("dealURLから開くdpURLです: ", dpUrls);
 
         for (let dpUrl of dpUrls) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            chrome.tabs.create({ url: dpUrl, active: false }, function(tab) {
-                chrome.tabs.onUpdated.addListener(function listener (tabId, info) {
-                    if (info.status === 'complete' && tabId === tab.id) {
-                        console.log("deal URLから/dpを開くよ");
-                        chrome.runtime.sendMessage({ action: 'processDpData', data: dpUrl, dealUrl: dealUrl });
-                        chrome.tabs.onUpdated.removeListener(listener);
-                        console.log("deal URLから/dpを開くよ");
-                    }
-                });
-            });
-            processedCount++;
+            try {
+                // 2. タイムアウトの代わりにリスナーがresolveされるのを待つ
+                await createTabAndUpdateListener(dpUrl, dealUrl);
+                processedCount++;
+            } catch (error) {
+                console.error("Error while processing dpUrl:", dpUrl, "Error:", error);
+            }
         }
+        // 2. 各dealUrlごとの待ち時間。必要に応じて調整してください。
         await new Promise(resolve => setTimeout(resolve, 7000));
     }
+
     console.log(`Processed ${processedCount} links.`);
 }
 
