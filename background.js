@@ -33,22 +33,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
 
         case 'dealData':
-            console.log("Received dealData:", message.data);
-            
-            for (let dealUrl of message.data.urls) {
-                if (dealUrl) {
-                    chrome.tabs.create({ url: dealUrl, active: false }, function(newTab) {
-                        // 新しいタブが開かれた後にリスナーを追加
-                        chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-                            if (info.status === 'complete' && tabId === newTab.id) {
-                                chrome.tabs.sendMessage(tabId, {action: 'processDealData'});
-                                chrome.tabs.onUpdated.removeListener(listener);
-                            }
-                        });
-                    });
-                }
-            }
+            openTabsForDealUrls(message.data);
             break;
+        
     }
 });
 
@@ -78,13 +65,17 @@ async function dealProcessLinks(linksObj) {
 
     for (let dealUrl in linksObj) {
         let dpUrls = linksObj[dealUrl];
+        console.log("dealURLから開くdpURLです: ",dpUrls);
+
         for (let dpUrl of dpUrls) {
             await new Promise(resolve => setTimeout(resolve, 5000));
-            chrome.tabs.create({ url: dpUrl, active: false, openerTabId: tab.id }, function(tab) {
+            chrome.tabs.create({ url: dpUrl, active: false }, function(tab) {
                 chrome.tabs.onUpdated.addListener(function listener (tabId, info) {
                     if (info.status === 'complete' && tabId === tab.id) {
+                        console.log("deal URLから/dpを開くよ");
                         chrome.runtime.sendMessage({ action: 'processDpData', data: dpUrl, dealUrl: dealUrl });
                         chrome.tabs.onUpdated.removeListener(listener);
+                        console.log("deal URLから/dpを開くよ");
                     }
                 });
             });
@@ -92,6 +83,35 @@ async function dealProcessLinks(linksObj) {
         }
         await new Promise(resolve => setTimeout(resolve, 7000));
     }
-
     console.log(`Processed ${processedCount} links.`);
 }
+
+
+const processedTabs = new Set();  // 処理済みのタブIDを保存するセット
+
+async function openTabsForDealUrls(data) {
+    console.log("Received dealData:", data);
+    
+    let urlsToOpen = data.urls.slice(0, 3); // 配列の先頭から3つの要素を取得
+
+    for (let dealUrl of urlsToOpen) {
+        if (dealUrl) {
+            // タブを開くときにPromiseを使用して、完了を待つ
+            await new Promise(resolve => {
+                chrome.tabs.create({ url: dealUrl, active: false }, function(newTab) {
+                    let listener = function(tabId, info) {
+                        if (info.status === 'complete' && tabId === newTab.id && !processedTabs.has(tabId)) {
+                            chrome.tabs.sendMessage(tabId, {action: 'processDealData'});
+                            processedTabs.add(tabId);  // タブIDを処理済みのセットに追加
+                            chrome.tabs.onUpdated.removeListener(listener);
+                            resolve();
+                        }
+                    };
+                    // 新しいタブが開かれた後にリスナーを追加
+                    chrome.tabs.onUpdated.addListener(listener);
+                });
+            });
+        }
+    }
+}
+

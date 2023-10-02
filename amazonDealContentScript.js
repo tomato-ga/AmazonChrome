@@ -32,15 +32,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             dealLinkMap[window.location.href] = dpLinks;
             console.log(dealLinkMap);
         
-            // background scriptにこのリンクマップを送る
             chrome.runtime.sendMessage({ action: 'processDealLinkMap', linkMap: dealLinkMap });
         
             // TODO DBに保存する
         }
-
     }
 })
-
-
-
-

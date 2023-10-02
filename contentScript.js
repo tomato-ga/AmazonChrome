@@ -6,14 +6,12 @@ let dealUrlLists = [];
 let dealLinksObject = {};
 let dpLinkObject = {};
 
-
 const chromeRuntoDPorDealUrls = async (dataObject) => {
     if (!dataObject.hasDealUrl) {
         const dpUrls = dataObject.urls;
         
         if (!dpUrls || !Array.isArray(dpUrls) || dpUrls.length === 0) {
             console.warn("dpUrls is not properly defined or is an empty array.");
-            // return;  // 処理を中断
         }
 
         for (let i = 0; i < dpUrls.length; i += 3) {
@@ -26,18 +24,9 @@ const chromeRuntoDPorDealUrls = async (dataObject) => {
             await new Promise(resolve => setTimeout(resolve, 7000)); // 3つのタブが開かれるのを待つための7秒の待ち時間
         }
     } else {
-
         if (dataObject.hasDealUrl) {
             await chrome.runtime.sendMessage({ action: 'dealData', data: dataObject });
         }
-    }
-};
-
-const sendToBackground = (message) => {
-    try {
-        chrome.runtime.sendMessage(message);
-    } catch (error) {
-        console.error("Failed to send message:", error);
     }
 };
 
@@ -50,13 +39,14 @@ const handleDpUrl = (url) => {
 };
 
 const handleDealUrl = (url) => {
-    dealUrlLists.push(url);
+    if (!dealUrlLists.includes(url)) {
+        dealUrlLists.push(url);
+    }
     dealLinksObject.hasDealUrl = true;
     dealLinksObject.urls = dealUrlLists;
 };
 
 const processPage = async () => {
-
     window.scrollBy(0, document.body.scrollHeight);
     await new Promise(resolve => setTimeout(resolve, 4500));
 
@@ -90,9 +80,6 @@ const processPage = async () => {
             await new Promise(resolve => setTimeout(resolve, 2000));
             await processPage();
         }
-    } else {
-        sendToBackground({action: "dpData", data: dpLinkObject});
-        sendToBackground({action: "dealData", data: dealLinksObject});
     }
 
     console.log("dpLinkObjectの中身", dpLinkObject);

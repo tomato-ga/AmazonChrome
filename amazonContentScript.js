@@ -3,6 +3,7 @@
 console.log("amazonContentScript.js is ロード");
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("Received message:", message);
     if (message.action === 'processDpData') {
         let productInfo = message.data;
         console.log("Received Deal URL:", message.dealUrl);
