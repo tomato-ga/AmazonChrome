@@ -35,7 +35,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'dealData':
             openTabsForDealUrls(message.data);
             break;
-        
+
+        case 'saveToDynamoDB':
+            saveToDynamoDB(message.data).then(response => {
+                sendResponse(response);
+            });
+            return true;  // 応答を非同期で返すために必要
     }
 });
 
@@ -135,3 +140,28 @@ async function openTabsForDealUrls(data) {
     }
 }
 
+let retries = 3;
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+async function saveToDynamoDB(productInfo) {
+    try {
+        const response = await fetch('https://y6rdeogd9l.execute-api.ap-northeast-1.amazonaws.com/ex/salesapi', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(productInfo)
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw err;
+        }
+        const responseData = await response.json();
+        console.log('データ保存成功', responseData);
+        return responseData;  // 保存が成功した場合はレスポンスを返す
+    } catch (err) {
+        console.error('DynamoDB保存でエラーが出ました', err);
+        return err;  // エラーが発生した場合はエラー情報を返す
+    }
+}

@@ -98,8 +98,8 @@ window.addEventListener('load', async () => {
     const currentUrl = window.location.href;
     if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal')) {
         await processPage();
-        // TODO: DP URLは一旦コメントアウト
-        // await chromeRuntoDPorDealUrls(dpLinkObject);
-        await chromeRuntoDPorDealUrls(dealLinksObject);
+
+        await chromeRuntoDPorDealUrls(dpLinkObject);
+        // await chromeRuntoDPorDealUrls(dealLinksObject);
     }
 });
