@@ -143,6 +143,7 @@ async function openTabsForDealUrls(data) {
 let retries = 3;
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
+// TODO dealの場合は別テーブルを用意する
 async function saveToDynamoDB(productInfo) {
     try {
         const response = await fetch('https://y6rdeogd9l.execute-api.ap-northeast-1.amazonaws.com/ex/salesapi', {
@@ -165,3 +166,4 @@ async function saveToDynamoDB(productInfo) {
         return err;  // エラーが発生した場合はエラー情報を返す
     }
 }
+

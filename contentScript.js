@@ -6,29 +6,60 @@ let dealUrlLists = [];
 let dealLinksObject = {};
 let dpLinkObject = {};
 
-const chromeRuntoDPorDealUrls = async (dataObject) => {
-    if (!dataObject.hasDealUrl) {
-        const dpUrls = dataObject.urls;
-        
-        if (!dpUrls || !Array.isArray(dpUrls) || dpUrls.length === 0) {
-            console.warn("dpUrls is not properly defined or is an empty array.");
-        }
+const TAB_OPEN_INTERVAL = 5000;
+const TAB_GROUP_DELAY = 7000;
+const TABS_AT_ONCE = 3;
+const RETRY_LIMIT = 3;
 
-        for (let i = 0; i < dpUrls.length; i += 3) {
-            let dpurlsToOpen = dpUrls.slice(i, i + 3);
-            for (let dpUrl of dpurlsToOpen) {
-                setTimeout(async () => {
-                    await chrome.runtime.sendMessage({ action: 'dpData', url: dpUrl, data: dataObject });
-                }, 5000); // 5秒待機してから実行
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const openTabAndMonitor = (url, data) => {
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ action: 'dpData', url: url, data: data }, (response) => {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(response);
             }
-            await new Promise(resolve => setTimeout(resolve, 7000)); // 3つのタブが開かれるのを待つための7秒の待ち時間
+        });
+    });
+};
+
+const chromeRuntoDPorDealUrls = async (dataObject) => {
+    if (dataObject.hasDealUrl) {
+        await chrome.runtime.sendMessage({ action: 'dealData', data: dataObject });
+        return;
+    }
+
+    const dpUrls = dataObject.urls;
+    if (!dpUrls || !Array.isArray(dpUrls) || dpUrls.length === 0) {
+        console.warn("dpUrls is not properly defined or is an empty array.");
+        return;
+    }
+
+    for (let i = 0; i < dpUrls.length; i += TABS_AT_ONCE) {
+        let dpurlsToOpen = dpUrls.slice(i, i + TABS_AT_ONCE);
+        for (let dpUrl of dpurlsToOpen) {
+            let retries = RETRY_LIMIT;
+            while (retries > 0) {
+                try {
+                    await openTabAndMonitor(dpUrl, dataObject);
+                    await sleep(TAB_OPEN_INTERVAL);
+                    break;
+                } catch (error) {
+                    retries--;
+                    if (retries === 0) {
+                        console.error(`Failed to open and monitor tab for URL ${dpUrl} after ${RETRY_LIMIT} attempts.`);
+                    } else {
+                        await sleep(1000);  // Wait for a short interval before retrying.
+                    }
+                }
+            }
         }
-    } else {
-        if (dataObject.hasDealUrl) {
-            await chrome.runtime.sendMessage({ action: 'dealData', data: dataObject });
-        }
+        await sleep(TAB_GROUP_DELAY);
     }
 };
+
 
 const handleDpUrl = (url) => {
     dpUrlLists.push(url);

@@ -51,6 +51,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             productInfo.affUrl = affUrl;
                             console.log(`アフィURLを作成:`, productInfo.affUrl);
         
+                            // カテゴリーを抽出
+                            const extractCategory = () => {
+                                const categoryElements = document.querySelector('span.a-list-item');
+                                if (categoryElements) {
+                                    const categoryName = categoryElements.textContent.trim();
+                                    console.log(`カテゴリー:`, productInfo.categoryName);
+                                    return categoryName;
+                                }
+                            }
+                            productInfo.categoryName = extractCategory();
+                            
+
                             // 割引きを抽出
                             const extractPriceoff = () => {
                                 const rePrice = /-\d+%/;
@@ -113,6 +125,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             productInfo.descripText = descriptionText1 ? descriptionText1 : (descriptionText2 ? descriptionText2 : "商品説明なし");
                             console.log("商品ページの商品説明:", productInfo.descripText);
         
+                            const getCurrentDateTime = () => {
+                                const now = new Date();
+                                const year = now.getFullYear();
+                                const month = String(now.getMonth() + 1).padStart(2, '0'); // 月は0から開始するため+1
+                                const day = String(now.getDate()).padStart(2, '0');
+                                const hours = String(now.getHours()).padStart(2, '0');
+                                const minutes = String(now.getMinutes()).padStart(2, '0');
+                                const seconds = String(now.getSeconds()).padStart(2, '0');
+                                
+                                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                            }
+                            productInfo.currentTime = getCurrentDateTime();
+
                             console.log(productInfo);
                             chrome.runtime.sendMessage({
                                 action: 'saveToDynamoDB',
@@ -120,7 +145,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             });
 
                             // TODO タブを閉じる
-                            // chrome.runtime.sendMessage({ action: 'closeCurrentTab' });
+                            chrome.runtime.sendMessage({ action: 'closeCurrentTab' });
+                            
                         }
                     }
                 }
