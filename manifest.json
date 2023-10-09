@@ -1,13 +1,14 @@
 {
     "manifest_version": 3,
     "name": "amazonScraping",
-    "version": "0.24",
+    "version": "0.3",
     "description": "Auto Crawl Amazon Pages",
     "permissions": [
         "tabs",
         "webNavigation",
         "webRequest",
-        "storage"
+        "storage",
+        "browsingData"
     ],
     "host_permissions": [
         "https://www.amazon.co.jp/*"

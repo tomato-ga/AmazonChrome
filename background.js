@@ -23,36 +23,82 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log("Received dpData:", message.url, message.data);
             
             chrome.tabs.create({ url: message.url, active: false }, (newTab) => {
-                chrome.tabs.onUpdated.addListener(function listener (tabId, info) {
+                let isLoaded = false;
+        
+                const checkTabStatus = (tabId, info) => {
                     if (info.status === 'complete' && tabId === newTab.id) {
+                        isLoaded = true;
                         chrome.tabs.sendMessage(tabId, {action: 'processDpData', data: message.data, url: message.url});
-                        chrome.tabs.onUpdated.removeListener(listener);  // Remove the listener to avoid it being called again
+                        chrome.tabs.onUpdated.removeListener(checkTabStatus);  // Remove the listener to avoid it being called again
                     }
-                });
+                };
+        
+                // 5秒後にタブのロードステータスを確認する
+                setTimeout(() => {
+                    if (!isLoaded) {
+                        // タブのロードが完了していない場合、タブをリロードする
+                        chrome.tabs.reload(newTab.id);
+                    }
+                }, 5000);
+        
+                chrome.tabs.onUpdated.addListener(checkTabStatus);
             });
             break;
-
+            
         case 'dealData':
             openTabsForDealUrls(message.data);
             break;
 
         case 'saveToDynamoDB':
+            console.log('保存はあとで');
+            // TODO DB保存は一時停止中
             saveToDynamoDB(message.data).then(response => {
                 sendResponse(response);
             });
             return true;  // 応答を非同期で返すために必要
+
+        case 'closeCreatedWindow':
+            if (openedWindowId) {
+                chrome.windows.remove(openedWindowId); // ウィンドウを閉じる
+                openedWindowId = null; // IDをリセット
+            }
+            break;
     }
 });
+
+// chrome.webNavigation.onCompleted.addListener(function(details) {
+//     chrome.storage.sync.get('enabled', function(data) {
+//         if (data.enabled) {
+//             if (details.url === 'https://www.amazon.co.jp/') {
+//                 // 新規ウィンドウをバックグラウンドで開く
+//                 chrome.windows.create({
+//                     url: 'https://www.amazon.co.jp/gp/goldbox',
+//                     focused: false, // ウィンドウをフォアグラウンドにしない
+//                     type: 'normal'  // 通常のウィンドウとして開く
+//                 });
+//             }
+//         }
+//     });
+// }, {
+//     url: [{
+//         hostEquals: 'www.amazon.co.jp',
+//         pathEquals: '/'
+//     }]
+// });
+
+
+let openedWindowId; // 新しく開いたウィンドウのIDを保存する変数
 
 chrome.webNavigation.onCompleted.addListener(function(details) {
     chrome.storage.sync.get('enabled', function(data) {
         if (data.enabled) {
             if (details.url === 'https://www.amazon.co.jp/') {
-                // 新規ウィンドウをバックグラウンドで開く
                 chrome.windows.create({
                     url: 'https://www.amazon.co.jp/gp/goldbox',
-                    focused: false, // ウィンドウをフォアグラウンドにしない
-                    type: 'normal'  // 通常のウィンドウとして開く
+                    focused: false,
+                    type: 'normal'
+                }, function(window) {
+                    openedWindowId = window.id; // ウィンドウIDを保存
                 });
             }
         }
@@ -63,6 +109,8 @@ chrome.webNavigation.onCompleted.addListener(function(details) {
         pathEquals: '/'
     }]
 });
+
+
 
 // TODO dealURLを含めたオブジェクトが渡る
 async function dealProcessLinks(linksObj) {
@@ -146,6 +194,8 @@ const delay = (ms) => new Promise(res => setTimeout(res, ms));
 // TODO dealの場合は別テーブルを用意する
 async function saveToDynamoDB(productInfo) {
     try {
+        // MEMO: テスト用のAPI const response = await fetch('https://02iq8m0s80.execute-api.ap-northeast-1.amazonaws.com/saletest/saletest', {
+
         const response = await fetch('https://y6rdeogd9l.execute-api.ap-northeast-1.amazonaws.com/ex/salesapi', {
             method: 'POST',
             headers: {

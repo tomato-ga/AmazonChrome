@@ -6,9 +6,11 @@ let dealUrlLists = [];
 let dealLinksObject = {};
 let dpLinkObject = {};
 
+let hasProcessedPage = false;
+
 const TAB_OPEN_INTERVAL = 5000;
 const TAB_GROUP_DELAY = 7000;
-const TABS_AT_ONCE = 3;
+const TABS_AT_ONCE = 2;
 const RETRY_LIMIT = 3;
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -60,7 +62,6 @@ const chromeRuntoDPorDealUrls = async (dataObject) => {
     }
 };
 
-
 const handleDpUrl = (url) => {
     dpUrlLists.push(url);
     dpLinkObject = {
@@ -78,6 +79,8 @@ const handleDealUrl = (url) => {
 };
 
 const processPage = async () => {
+    if (hasProcessedPage) return;
+
     window.scrollBy(0, document.body.scrollHeight);
     await new Promise(resolve => setTimeout(resolve, 4500));
 
@@ -103,7 +106,7 @@ const processPage = async () => {
         }
     }
 
-    if (pageCounter < 2) {
+    if (pageCounter < 1) {
         let nextLink = document.querySelector('ul.a-pagination > li.a-last > a');
         if (nextLink) {
             pageCounter++;
@@ -111,6 +114,8 @@ const processPage = async () => {
             await new Promise(resolve => setTimeout(resolve, 2000));
             await processPage();
         }
+    } else {
+        hasProcessedPage = true;
     }
 
     console.log("dpLinkObjectの中身", dpLinkObject);
@@ -127,9 +132,8 @@ const slashDealUrl = (nodehref) => {
 
 window.addEventListener('load', async () => {
     const currentUrl = window.location.href;
-    if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal')) {
+    if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal') && !hasProcessedPage) {
         await processPage();
-
         await chromeRuntoDPorDealUrls(dpLinkObject);
         // await chromeRuntoDPorDealUrls(dealLinksObject);
     }
