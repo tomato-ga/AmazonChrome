@@ -148,7 +148,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             });
 
                             // TODO タブを閉じる
-                            // chrome.runtime.sendMessage({ action: 'closeCurrentTab' });
+                            chrome.runtime.sendMessage({ action: 'closeCurrentTab' });
                             
                         }
                     }
