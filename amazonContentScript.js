@@ -9,6 +9,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log("Received Deal URL:", message.dealUrl);
         console.log("Received DP URL:", message.dpUrl);
 
+        productInfo.dealUrl = message.dealUrl;
+        productInfo.dpUrl = message.dpUrl;
+
         if (window.location.href.includes('/dp')) {
             
             const observerCallback = (mutationsList, observer) => {
@@ -145,7 +148,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             });
 
                             // TODO タブを閉じる
-                            chrome.runtime.sendMessage({ action: 'closeCurrentTab' });
+                            // chrome.runtime.sendMessage({ action: 'closeCurrentTab' });
                             
                         }
                     }

@@ -193,6 +193,32 @@ const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
 // TODO dealの場合は別テーブルを用意する
 async function saveToDynamoDB(productInfo) {
+
+    if (productInfo.dealUrl) {
+        try {
+            // MEMO: テスト用のAPI const response = await fetch('https://02iq8m0s80.execute-api.ap-northeast-1.amazonaws.com/saletest/saletest', {
+    
+            const response = await fetch('https://ywrr1ij1ka.execute-api.ap-northeast-1.amazonaws.com/dealtest/saledeal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(productInfo)
+            });
+    
+            if (!response.ok) {
+                const err = await response.json();
+                throw err;
+            }
+            const responseData = await response.json();
+            console.log('データ保存成功', responseData);
+            return responseData;  // 保存が成功した場合はレスポンスを返す
+        } catch (err) {
+            console.error('DynamoDB保存でエラーが出ました', err);
+            return err;  // エラーが発生した場合はエラー情報を返す
+        }
+    }
+
     try {
         // MEMO: テスト用のAPI const response = await fetch('https://02iq8m0s80.execute-api.ap-northeast-1.amazonaws.com/saletest/saletest', {
 
