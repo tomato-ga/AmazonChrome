@@ -134,7 +134,9 @@ window.addEventListener('load', async () => {
     const currentUrl = window.location.href;
     if (!currentUrl.includes('/dp') && !currentUrl.includes('/deal') && !hasProcessedPage) {
         await processPage();
-        // DPのURL処理　await chromeRuntoDPorDealUrls(dpLinkObject); 
+        // DPのURL処理
+        await chromeRuntoDPorDealUrls(dpLinkObject); 
+        // Dealの処理
         await chromeRuntoDPorDealUrls(dealLinksObject);
     }
 });
