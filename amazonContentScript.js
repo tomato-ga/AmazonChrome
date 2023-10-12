@@ -3,6 +3,7 @@
 console.log("amazonContentScript.js is ロード");
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+
     console.log("Received message:", message);
     if (message.action === 'processDpData') {
         let productInfo = {};
@@ -98,7 +99,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             productInfo.price = priceText;
                             console.log("商品ページの値段を抽出中:", productInfo.price);
         
-        
+                            // スクロール
+                            window.scrollBy(0, document.body.scrollHeight);
+
                             // 商品説明を抽出
                             const extractProductDescription = () => {
                                 const descripElement = document.querySelector('div#productDescription');
@@ -150,7 +153,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             productInfo.currentTime = getCurrentTime();
                             
 
-
                             const extractReviewStars = () => {
                                 const reviewStar = document.querySelector('div#averageCustomerReviews  span'); // レビューの星
                                 if (reviewStar) {
@@ -176,17 +178,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             productInfo.reviewCount = extractReviewCount();
 
                             const extractReviewText = () => {
-                                const reviewTextElements = document.querySelectorAll('div.reviews-content > *');
-                                if (reviewTextElements.length > 0) {
-                                    return reviewTextElements[0].textContent.trim();
-                                }
-                                return "";
+                                const reviewTextElement = document.querySelector('div.reviews-content div div.reviewText');
+                                return reviewTextElement ? reviewTextElement.innerText.trim() : "";
                             }
+                            
                             productInfo.reviewText = extractReviewText();
                             
-
-
+                            
+                            console.log(typeof productInfo.reviewText);
                             console.log(productInfo);
+                            
                             chrome.runtime.sendMessage({
                                 action: 'saveToDynamoDB',
                                 data: productInfo

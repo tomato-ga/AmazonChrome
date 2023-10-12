@@ -165,7 +165,7 @@ const processedTabs = new Set();  // 処理済みのタブIDを保存するセ�
 async function openTabsForDealUrls(data) {
     console.log("Received dealData:", data);
     
-    let urlsToOpen = data.urls.slice(0, 3); // 配列の先頭から3つの要素を取得
+    let urlsToOpen = data.urls.slice(0, 6); // 配列の先頭から3つの要素を取得
 
     for (let dealUrl of urlsToOpen) {
         if (dealUrl) {

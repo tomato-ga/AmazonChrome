@@ -106,7 +106,7 @@ const processPage = async () => {
         }
     }
 
-    if (pageCounter < 1) {
+    if (pageCounter < 2) {
         let nextLink = document.querySelector('ul.a-pagination > li.a-last > a');
         if (nextLink) {
             pageCounter++;
