@@ -59,7 +59,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                 const categoryElements = document.querySelector('span.a-list-item');
                                 if (categoryElements) {
                                     const categoryName = categoryElements.textContent.trim();
-                                    console.log(`カテゴリー:`, productInfo.categoryName);
+                                    console.log(`カテゴリー:`, categoryName);
                                     return categoryName;
                                 }
                             }
@@ -128,18 +128,63 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             productInfo.descripText = descriptionText1 ? descriptionText1 : (descriptionText2 ? descriptionText2 : "商品説明なし");
                             console.log("商品ページの商品説明:", productInfo.descripText);
         
-                            const getCurrentDateTime = () => {
+                            const getCurrentDate = () => {
                                 const now = new Date();
                                 const year = now.getFullYear();
                                 const month = String(now.getMonth() + 1).padStart(2, '0'); // 月は0から開始するため+1
                                 const day = String(now.getDate()).padStart(2, '0');
+                            
+                                return `${year}-${month}-${day}`;
+                            }
+                            
+                            const getCurrentTime = () => {
+                                const now = new Date();
                                 const hours = String(now.getHours()).padStart(2, '0');
                                 const minutes = String(now.getMinutes()).padStart(2, '0');
                                 const seconds = String(now.getSeconds()).padStart(2, '0');
-                                
-                                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                            
+                                return `${hours}:${minutes}:${seconds}`;
                             }
-                            productInfo.currentTime = getCurrentDateTime();
+                            
+                            productInfo.currentDate = getCurrentDate();
+                            productInfo.currentTime = getCurrentTime();
+                            
+
+
+                            const extractReviewStars = () => {
+                                const reviewStar = document.querySelector('div#averageCustomerReviews  span'); // レビューの星
+                                if (reviewStar) {
+                                    let starText = reviewStar.textContent.trim();
+                                    if (starText.length > 0) {
+                                        return starText;
+                                    }
+                                }
+                                return "";
+                            }
+                            productInfo.reviewStar = extractReviewStars();
+
+                            const extractReviewCount = () => {
+                                const reviewElement = document.querySelector('span#acrCustomerReviewText'); // レビュー件数を取得
+                                if (reviewElement) {
+                                    let reviewText = reviewElement.textContent.trim();
+                                    if (reviewText.length > 0) {
+                                        return reviewText;
+                                    }
+                                }
+                                return "";
+                            }
+                            productInfo.reviewCount = extractReviewCount();
+
+                            const extractReviewText = () => {
+                                const reviewTextElements = document.querySelectorAll('div.reviews-content > *');
+                                if (reviewTextElements.length > 0) {
+                                    return reviewTextElements[0].textContent.trim();
+                                }
+                                return "";
+                            }
+                            productInfo.reviewText = extractReviewText();
+                            
+
 
                             console.log(productInfo);
                             chrome.runtime.sendMessage({
