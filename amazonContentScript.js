@@ -77,7 +77,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                         return priceOffText;
                                     }
                                 }
-                                return "割引きなし";
+                                return "";
                             }
                             const priceOfftext = extractPriceoff();
                             productInfo.priceOff = priceOfftext;
@@ -93,7 +93,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                         return priceText;
                                     }
                                 }
-                                return "値段なし";
+                                return "";
                             }
                             const priceText = extractPrice();
                             productInfo.price = priceText;
@@ -128,7 +128,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             const descriptionText2 = extractFeatureBullets();
         
                             // 優先度に基づいて商品説明を格納
-                            productInfo.descripText = descriptionText1 ? descriptionText1 : (descriptionText2 ? descriptionText2 : "商品説明なし");
+                            productInfo.descripText = descriptionText1 ? descriptionText1 : (descriptionText2 ? descriptionText2 : "");
                             console.log("商品ページの商品説明:", productInfo.descripText);
         
                             const getCurrentDate = () => {

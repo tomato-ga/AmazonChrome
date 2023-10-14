@@ -106,7 +106,7 @@ const processPage = async () => {
         }
     }
 
-    if (pageCounter < 2) {
+    if (pageCounter < 1) { // なんページ取得するか？ 1の場合は2ページ
         let nextLink = document.querySelector('ul.a-pagination > li.a-last > a');
         if (nextLink) {
             pageCounter++;
